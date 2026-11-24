@@ -1,2 +1,1273 @@
 # context
 РАЗРАБОТКА ВЕБ-ПЛАТФОРМЫ ТЕМАТИЧЕСКИХ МАРШРУТОВ ПО САНКТ-ПЕТЕРБУРГУ
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>КОНТЕКСТ — Найди свой город</title>
+
+<!-- Карта -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+/* =========================
+   ШРИФТ И ОСНОВНЫЕ НАСТРОЙКИ
+========================= */
+
+@font-face {
+    font-family: 'Cakra';
+    src: url('Cakra-Normal.woff') format('woff');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    --pink: #f329a0;
+    --light-pink: #ffe1f1;
+    --black: #171317;
+    --white: #fff5fb;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Cakra', sans-serif !important;
+}
+
+body {
+    margin: 0;
+    color: var(--black);
+    background-color: var(--white);
+    /*background-image: url('background.png');*/
+    background-repeat: repeat-y;
+    background-size: 1440px 750px;
+}
+
+/* =========================
+   НАВИГАЦИЯ
+========================= */
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--black);
+    color: white;
+    border-bottom: 4px solid var(--pink);
+}
+
+nav {
+    max-width: 1400px;
+    margin: auto;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 900;
+    color: var(--pink);
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 12px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.nav-links a:hover {
+    color: var(--pink);
+}
+
+/* =========================
+   ОБЩИЕ ЭЛЕМЕНТЫ
+========================= */
+
+main {
+    max-width: 1400px;
+    margin: auto;
+    padding: 25px;
+}
+
+section {
+    margin-bottom: 65px;
+    scroll-margin-top: 85px;
+}
+
+h1, h2, h3 {
+    text-transform: uppercase;
+    margin-top: 0;
+}
+
+h1 {
+    font-size: clamp(42px, 7vw, 85px);
+    line-height: .95;
+}
+
+h2 {
+    font-size: clamp(30px, 5vw, 55px);
+}
+
+p {
+    line-height: 1.6;
+}
+
+.accent {
+    color: var(--pink);
+}
+
+button {
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 13px 22px;
+    background: var(--pink);
+    color: white;
+    border: 2px solid var(--black);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: bold;
+    box-shadow: 4px 4px 0 var(--black);
+    transition: .2s;
+}
+
+.btn:hover {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 var(--black);
+}
+
+/* =========================
+   ГЛАВНАЯ
+========================= */
+
+.hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: center;
+    min-height: 430px;
+}
+
+.hero-image {
+    height: 330px;
+    border: 2px solid var(--black);
+    box-shadow: 8px 8px 0 var(--pink);
+    overflow: hidden;
+}
+
+.hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero h1 span {
+    color: var(--pink);
+}
+
+/* =========================
+   КАРТОЧКИ МАРШРУТОВ
+========================= */
+
+.route-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border: 2px solid var(--black);
+    box-shadow: 5px 5px 0 var(--pink);
+    overflow: hidden;
+}
+
+.card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.card-content {
+    padding: 15px;
+}
+
+.card h3 {
+    font-size: 22px;
+}
+
+.category {
+    display: inline-block;
+    padding: 5px 10px;
+    background: var(--pink);
+    color: white;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+/* =========================
+   СТРАНИЦА МАРШРУТА
+========================= */
+
+.route-page {
+    display: grid;
+    grid-template-columns: .85fr 1.3fr;
+    gap: 25px;
+    align-items: start;
+}
+
+.route-info {
+    background: white;
+    border: 2px solid var(--black);
+    padding: 22px;
+    box-shadow: 6px 6px 0 var(--pink);
+}
+
+.main-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--black);
+    padding-bottom: 10px;
+}
+
+.main-tabs button {
+    background: transparent;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    color: #888;
+    text-transform: uppercase;
+    padding: 5px 10px;
+}
+
+.main-tabs button.active {
+    color: var(--pink);
+    border-bottom: 3px solid var(--pink);
+}
+
+.duration-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0 20px;
+}
+
+.duration-tabs button {
+    padding: 10px 18px;
+    border: 1px solid var(--black);
+    background: white;
+    border-radius: 25px;
+}
+
+.duration-tabs button.active {
+    background: var(--pink);
+    color: white;
+}
+
+#map {
+    height: 540px;
+    width: 100%;
+    border: 2px solid var(--black);
+}
+
+.point-list {
+    display: grid;
+    gap: 9px;
+    margin-top: 20px;
+}
+
+.point {
+    padding: 12px;
+    background: var(--light-pink);
+    border: 1px solid #e6b3d1;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.point.active {
+    border: 2px solid var(--pink);
+    background: #ffc5e5;
+}
+
+.point b {
+    display: block;
+    font-size: 14px;
+}
+
+.point small {
+    color: #766575;
+}
+
+.point-thumb {
+    width: 52px;
+    height: 52px;
+    object-fit: cover;
+    border: 1px solid var(--black);
+    flex-shrink: 0;
+}
+
+.point-description {
+    background: white;
+    padding: 18px;
+    margin-top: 18px;
+    border: 1px solid #e6b3d1;
+}
+
+.point-description h3 {
+    font-size: 25px;
+}
+
+.point-description p {
+    font-size: 13px;
+}
+
+.point-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border: 2px solid var(--black);
+    box-shadow: 4px 4px 0 var(--pink);
+    margin: 12px 0 15px;
+    display: block;
+    background: var(--light-pink);
+}
+
+/* =========================
+   ДОПОЛНИТЕЛЬНЫЕ ТОЧКИ
+========================= */
+
+.map-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.map-buttons button {
+    padding: 9px 13px;
+    border: 1px solid var(--black);
+    background: white;
+    border-radius: 20px;
+}
+
+.map-buttons button.active {
+    background: var(--pink);
+    color: white;
+}
+
+/* =========================
+   О ПРОЕКТЕ
+========================= */
+
+.about-intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    align-items: center;
+}
+
+.about-intro img {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    border: 2px solid var(--black);
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.step {
+    padding: 18px;
+    background: var(--pink);
+    color: white;
+    min-height: 170px;
+}
+
+.step b {
+    font-size: 22px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.step p {
+    font-size: 12px;
+}
+
+.about-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.about-buttons a {
+    text-align: center;
+    border-radius: 30px;
+}
+
+/* =========================
+   ФОРМЫ
+========================= */
+
+.form-box {
+    background: white;
+    padding: 25px;
+    border: 2px solid var(--black);
+    margin-top: 20px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0 15px;
+    border: 1px solid var(--black);
+    background: #fff5fb;
+    font-size: 14px;
+}
+
+/* =========================
+   СОХРАНЁННОЕ
+========================= */
+
+.saved-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.remove-btn {
+    background: var(--black);
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 10px;
+    width: 100%;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+footer {
+    background: var(--black);
+    color: white;
+    padding: 30px;
+    border-top: 5px solid var(--pink);
+}
+
+/* Принудительный шрифт для элементов карты */
+.leaflet-popup-content,
+.leaflet-popup-content *,
+.leaflet-container,
+.leaflet-container *,
+input, textarea, select, option, button {
+    font-family: 'Cakra', sans-serif !important;
+}
+
+/* СКРЫВАЕМ ФЛАГ В АТРИБУЦИИ КАРТЫ */
+.leaflet-attribution-flag {
+    display: none !important;
+}
+
+@media(max-width: 850px) {
+    .hero, .about-intro, .route-page {
+        grid-template-columns: 1fr;
+    }
+
+    .steps {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .route-cards, .saved-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .nav-links {
+        gap: 12px;
+    }
+}
+
+@media(max-width: 550px) {
+    nav {
+        flex-direction: column;
+    }
+
+    .nav-links {
+        justify-content: center;
+    }
+
+    .route-cards, .saved-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .steps {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .about-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    #map {
+        height: 380px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<nav>
+    <a href="#home" class="logo">✳ КОНТЕКСТ</a>
+
+    <div class="nav-links">
+        <a href="#about">О проекте</a>
+        <a href="#routes">Маршруты</a>
+        <a href="#saved">Сохранённое</a>
+    </div>
+</nav>
+</header>
+
+<main>
+
+<!-- ГЛАВНАЯ -->
+
+<section class="hero" id="home">
+    <div>
+        <h1>
+            У каждого места<br>
+            есть <span>контекст</span>
+        </h1>
+
+        <p>
+            Исследуй Санкт-Петербург через тематические
+            маршруты, необычные места и городские истории.
+        </p>
+
+        <a href="#routes" class="btn">Выбрать маршрут →</a>
+    </div>
+
+    <div class="hero-image">
+        <img src="a8ab79ae872024678166e9127fe480e4.jpg" alt="Санкт-Петербург">
+    </div>
+</section>
+
+
+<!-- МАРШРУТЫ -->
+
+<section id="routes">
+
+<h2>Маршруты</h2>
+
+<p>Выбирай прогулку по интересам и открывай город с новой стороны.</p>
+
+<div class="route-cards">
+
+    <!-- Карточка Майор Гром -->
+    <div class="card">
+        <img src="images/grom/24d3fff89c484467fee6787bc9d478dc.jpg" alt="Кино">
+        <div class="card-content">
+            <span class="category">Кино</span>
+            <h3>Майор Гром: Чумной Доктор</h3>
+            <p>Места съёмок фильма в Санкт-Петербурге.</p>
+            <a href="#route" class="btn" onclick="setMainCategory('grom')">Открыть маршрут →</a>
+        </div>
+    </div>
+
+    <!-- Новая карточка Музыка -->
+    <div class="card">
+        <img src="18d9685e82a7d690d64fcb7df0d3480e.jpg" alt="Музыка">
+        <div class="card-content">
+            <span class="category">Музыка</span>
+            <h3>Музыкальный Петербург</h3>
+            <p>Легендарные рок-клубы и джазовые подвалы города.</p>
+            <a href="#route" class="btn" onclick="setMainCategory('music')">Открыть маршрут →</a>
+        </div>
+    </div>
+
+</div>
+</section>
+
+
+<!-- ИНТЕРАКТИВНЫЙ МАРШРУТ -->
+
+<section id="route">
+
+<!-- Заголовки, которые меняются в зависимости от категории -->
+<h2 id="routeMainTitle">Майор Гром: Чумной Доктор</h2>
+<p id="routeMainDesc">Пройди по местам, которые стали частью кинематографической истории Петербурга.</p>
+
+<div class="route-page">
+
+    <div class="route-info">
+
+        <!-- ГЛАВНЫЕ ТАБЫ (Гром / Музыка) -->
+        <div class="main-tabs">
+            <button id="tabGrom" class="active" onclick="setMainCategory('grom')">Кино</button>
+            <button id="tabMusic" onclick="setMainCategory('music')">Музыка</button>
+        </div>
+
+        <span class="category" id="routeCategory">Кино · Санкт-Петербург</span>
+
+        <h2 style="font-size:30px; margin-top: 10px;" id="routeSubTitle">
+            Петербург в кадре
+        </h2>
+
+        <!-- ПОДТАБЫ (меняются динамически: 30 мин/1 час или Рок/Джаз) -->
+        <div class="duration-tabs" id="subTabs">
+            <!-- Генерируется в JS -->
+        </div>
+
+        <p id="routeDescription">
+            Короткая прогулка по кинолокациям фильма.
+        </p>
+
+        <div class="point-list" id="pointList"></div>
+
+        <div class="point-description" id="pointDescription">
+            Выбери точку маршрута на карте или в списке.
+        </div>
+
+        <button class="btn" id="favoriteButton" style="margin-top: 20px;" onclick="toggleFavorite()">
+            ♡ Добавить в избранное
+        </button>
+
+    </div>
+
+    <div>
+
+        <div class="map-buttons">
+            <button class="active" onclick="showLayer('route',this)">Маршрут</button>
+            <button onclick="showLayer('food',this)">Где перекусить</button>
+            <button onclick="showLayer('wc',this)">Туалеты</button>
+        </div>
+
+        <div id="map"></div>
+
+        <p style="font-size:11px">
+            Нажми на маркер, чтобы узнать больше о месте.
+        </p>
+
+        <button class="btn" onclick="startGeolocation()">
+            Определить моё местоположение
+        </button>
+
+        <p id="geoStatus" style="font-size:12px"></p>
+
+    </div>
+
+</div>
+</section>
+
+
+<!-- СОХРАНЁННОЕ -->
+
+<section id="saved">
+
+<h2>Сохранённые маршруты</h2>
+
+<p>Здесь собраны прогулки, которые ты добавил в избранное.</p>
+
+<div class="saved-grid" id="savedGrid"></div>
+
+</section>
+
+
+<!-- О ПРОЕКТЕ -->
+
+<section id="about">
+
+<h2>О проекте</h2>
+
+<div class="about-intro">
+
+    <img src="0c65ffd49917ef8a0f81bbeb31e1cb77.jpg" alt="Петербург">
+
+    <div>
+        <h2 style="font-size:35px">
+            <span class="accent">КОНТЕКСТ</span> —
+            это про Петербург, который хочется исследовать
+        </h2>
+
+        <p>
+            Мы собрали тематические маршруты, необычные места
+            и идеи прогулок, чтобы ты мог увидеть город
+            по-новому.
+        </p>
+
+        <p>
+            Выбирай интересные направления, открывай новые
+            локации и создавай собственную историю знакомства
+            с Санкт-Петербургом.
+        </p>
+    </div>
+
+</div>
+
+<h2 style="margin-top:45px">Как работает проект?</h2>
+
+<div class="steps">
+
+    <div class="step">
+        <b>01. ВЫБИРАЙ</b>
+        <p>
+            Выбираешь маршрут по теме и длительности.
+            Найди прогулку, которая тебе интересна.
+        </p>
+    </div>
+
+    <div class="step">
+        <b>02. ОТКРЫВАЙ</b>
+        <p>
+            Открываешь карту — видишь все точки
+            и порядок прохождения маршрута.
+        </p>
+    </div>
+
+    <div class="step">
+        <b>03. ИССЛЕДУЙ</b>
+        <p>
+            Идёшь по точкам. У каждой есть описание,
+            фотографии и навигация.
+        </p>
+    </div>
+
+    <div class="step">
+        <b>04. ДЕЛИСЬ</b>
+        <p>
+            Сохраняешь маршрут в избранное
+            или предлагаешь друзьям отправиться вместе.
+        </p>
+    </div>
+
+</div>
+
+<div class="about-buttons">
+    <a href="#suggest" class="btn">Предложить место</a>
+    <a href="#feedback" class="btn">Отзывы</a>
+    <a href="#contacts" class="btn">Контакты и социальные сети</a>
+</div>
+
+<div class="form-box" id="suggest">
+    <h2>Предложить место</h2>
+    <p>Знаешь интересную локацию? Расскажи о ней!</p>
+
+    <form onsubmit="sendForm(event,'Предложение места')">
+        <input required placeholder="Название места">
+        <input required placeholder="Адрес">
+        <textarea required placeholder="Расскажи, чем интересно это место"></textarea>
+        <button class="btn">Отправить предложение</button>
+    </form>
+</div>
+
+<div class="form-box" id="feedback">
+    <h2>Оставить отзыв</h2>
+
+    <form onsubmit="sendForm(event,'Отзыв')">
+        <input required placeholder="Твоё имя">
+        <textarea required placeholder="Поделись впечатлениями о проекте"></textarea>
+        <button class="btn">Отправить отзыв</button>
+    </form>
+</div>
+
+<div class="form-box" id="contacts">
+    <h2>Контакты и социальные сети</h2>
+
+    <p>Мы открыты к общению и новым идеям!</p>
+
+    <p>
+        <a href="#" class="accent">ВКонтакте</a><br>
+        <a href="#" class="accent">Telegram</a><br>
+        <a href="mailto:hello@example.com">Электронная почта</a>
+    </p>
+</div>
+
+</section>
+
+</main>
+
+<footer>
+    <h2>КОНТЕКСТ ✳</h2>
+    <p>У каждого места есть контекст.</p>
+    <small>Санкт-Петербург · 2026</small>
+</footer>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+/* =========================
+   БАЗА ДАННЫХ МАРШРУТОВ
+========================= */
+
+const routesData = {
+    grom: {
+        title: 'Майор Гром: Чумной Доктор',
+        desc: 'Пройди по местам, которые стали частью кинематографической истории Петербурга.',
+        category: 'Кино · Санкт-Петербург',
+        subTitle: 'Петербург в кадре',
+        activeTab: 'short',
+        tabs: [
+            { id: 'short', label: '30 минут' },
+            { id: 'long', label: '1 час' }
+        ],
+        data: {
+            short: {
+                description: 'Короткая прогулка по шести кинолокациям фильма.',
+                points: [
+                    {
+                        name:'Начало бунтов', address:'Площадь Островского, 4',
+                        lat:59.932667, lon:30.336619,
+                        img:'images/grom/1-ostrovsky.webp',
+                        description:`Наша первая точка - это Площадь Островского, с которой начинается цепочка событий, ведущих к масштабным беспорядкам.
+Для съёмок эпизода перекрывали движение на площади и улице Зодчего Росси. Толпа, подогреваемая идеями Чумного Доктора, собирается здесь, чтобы двинуться к сердцу города.`
+                    },
+                    {
+                        name:'Бунты', address:'Улица Зодчего Росси',
+                        lat:59.930376, lon:30.335550,
+                        img:'images/grom/960.webp',
+                        description:`Улица Зодчего Росси стала местом масштабных погромов. Контраст между идеальной геометрией улицы (ширина 22 метра равна высоте зданий) и творящимся безумием создаёт мощный образ.
+Съёмки были сложными: группе выделили только один день, а чтобы реквизит выглядел побитым, декорации забрасывали яйцами.`
+                    },
+                    {
+                        name:'Сцена после бара', address:'Ломоносовский мост',
+                        lat:59.928460, lon:30.335694,
+                        img:'images/grom/caption.jpg',
+                        description:`Здесь снимали эпизод, где Игорь Гром и Фёдор Прокопенко после бара идут по пустому ночному городу.
+Мост (бывший Чернышёв) — один из старейших каменных мостов Петербурга (1785–1787). Его башенки — узнаваемый элемент архитектуры Фонтанки.`
+                    },
+                    {
+                        name:'Трущобы Киевстонера', address:'Казанская улица, 12',
+                        lat:59.93020, lon:30.32400,
+                        img:'images/grom/i.webp',
+                        description:`Дом и его дворы стали «городскими трущобами», где правит Игнат «Бустер» (Альберт Васильев). Многие реплики персонажа были импровизацией.
+Художники специально искали места с обшарпанными фасадами для контраста с парадным Петербургом.`
+                    },
+                    {
+                        name:'Шава 24/7', address:'Банковский переулок, 1',
+                        lat:59.931165, lon:30.322920,
+                        img:'images/grom/Sj0ky4JgWGk.jpg',
+                        description:`Легендарная точка. Банковский переулок (215 метров) стал культовым местом с палаткой шавермы.
+Шаверма для Грома — ритуал. Палатки уже нет, но переулок хранит память об этих сценах.`
+                    },
+                    {
+                        name:'Крыша из концовки', address:'Казанская улица, 12',
+                        lat:59.93020, lon:30.32400,
+                        img:'images/grom/e8b8d0d0b56e6c6342dee783d914937f.jpg',
+                        description:`Финальная сцена с Димой Дубиным и Юлей Пчёлкиной. Момент тишины и тепла после погонь.
+Для съёмок команда посетила 30 разных крыш Петербурга. Эта крыша даёт ощущение «своего», непарадного города.`
+                    }
+                ]
+            },
+            long: {
+                description: 'Расширенная прогулка по экшн-сценам фильма.',
+                points: [
+                    { name: 'Полицейская баррикада', address: 'Галерная улица дом 21', lat: 59.9342, lon: 30.3350, img: 'images/grom/poster_event_1230636.jpg', description: `Противостояние полиции и бунтующей толпы.` },
+                    { name: 'Казино двор', address: 'Почтамтская ул., д. 3-5', lat: 59.9338, lon: 30.3365, img: 'images/grom/1013371.jpg', description: `Место криминальных разборок.` },
+                    { name: 'Начало погони', address: 'Большая Морская ул., 40', lat: 59.9355, lon: 30.3320, img: 'images/grom/unnamed.png', description: `Зрелищная погоня за преступником.` },
+                    { name: 'Памятник первому полицейскому', address: 'Большая Морская ул., 3', lat: 59.9370, lon: 30.3290, img: 'images/grom/horodovoj-na-maloj-konjushennoj-ulyce-anfas.jpg', description: `Символическое место для истории.` },
+                    { name: 'Конец погони', address: 'Дворцовая площадь', lat: 59.9390, lon: 30.3240, img: 'images/grom/a94bfcf6fed729d08634a873f58c5af6.jpg', description: `Схватка и задержание.` },
+                    { name: 'Суд снаружи', address: 'Миллионная улица 35', lat: 59.9310, lon: 30.3270, img: 'images/grom/unnamed (2).png', description: `Попытки повлиять на расследование.` },
+                    { name: 'Полицейский участок', address: 'Мраморный дворец', lat: 59.9290, lon: 30.3380, img: 'images/grom/00024.nBKYgsc.png', description: `Штаб расследования дела Чумного Доктора.` },
+                    { name: 'РосГарантБанк', address: 'Соляной переулок, 15', lat: 59.9325, lon: 30.3450, img: 'images/grom/unnamed (3).png', description: `Арена грандиозного ограбления с дирижаблем.` }
+                ]
+            }
+        }
+    },
+    music: {
+        title: 'Музыкальный Петербург',
+        desc: 'Легендарные места, где рождалась и звучала музыка города.',
+        category: 'Музыка · Санкт-Петербург',
+        subTitle: 'Где рождался звук',
+        activeTab: 'rock',
+        tabs: [
+            { id: 'rock', label: 'Рок (1 час)' },
+            { id: 'jazz', label: 'Джаз (30 минут)' }
+        ],
+        data: {
+            rock: {
+                description: 'Маршрут по легендарным местам ленинградского рока.',
+                points: [
+                    { name:'Кафе «Сайгон»', address:'Невский пр. 49', lat:59.9345, lon:30.3475, img:'images/music/1011.jpg', description:`Сейчас здесь дорогой отель, но в 70-80-х это было культовое место неформальной молодежи и первых рок-музыкантов. Здесь обсуждали запрещенную музыку и договаривались о квартирниках. «Сайгон» закрыт в 1989 году, напоминанием служит мемориальная табличка.` },
+                    { name:'Эльфийский садик', address:'Дмитровский пер. 1 (сквер)', lat:59.9333, lon:30.3440, img:'images/music/cf38cb72-23cd-4606-b351-142beff847eb.jpg', description:`После закрытия «Сайгона» сквер стал точкой сбора для музыкантов и поэтов. Именно здесь формировались связи между будущими звездами сцены.` },
+                    { name:'Ленинградский рок-клуб', address:'ул. Рубинштейна, 13', lat:59.9294, lon:30.3439, img:'images/music/1693984107959.webp', description:`Клуб открыт в марте 1981 года. Здесь "Кино", "Алиса" и "Зоопарк" впервые легально вышли из подполья на сцену. Просуществовал до 90-х. Сейчас здесь театр, но на доме есть памятная доска — место силы для поклонников рока.` },
+                    { name:'Арт-центр «Пушкинская-10»', address:'Лиговский пр. 53', lat:59.9278, lon:30.3552, img:'images/music/i.webp', description:`Возник в 1989 году, когда здание заняли художники и музыканты. Здесь находится «улица Джона Леннона» и музей «Реалии Русского рока». В 80-90х здесь работали Сергей Курёхин и Тимур Новиков, бывали «Аквариум» и «ДДТ», а в клубе Fish Fabrique до сих пор звучит живая музыка.` },
+                    { name:'Магазин Castle Rock', address:'Лиговский пр. 47', lat:59.9285, lon:30.3565, img:'images/music/i (1).webp', description:`Старейший в России магазин рок-атрибутики (с 1993 года). Место встреч для всех неравнодушных к року. Здесь можно было «достать» запрещенные пластинки. Сейчас можно зайти и посмотреть коллекции автографов, афиш и фотографий музыкантов. Расположен в подвале, что сохраняет атмосферу «тайного места».` },
+                    { name:'Клуб «Грибоедов»', address:'ул. Воронежская, 2А', lat:59.9272, lon:30.3595, img:'images/music/347070700681389.jpg', description:`Клуб ведет историю с 90-х. Здесь собирались любители андеграунда. Выступали «Ленинград», «2 самолета», «Кирпичи», проходили первые ретро-вечеринки. Клуб активен до сих пор, на его сцене все также выступают рок-группы.` },
+                    { name:'Котельная «Камчатка»', address:'ул. Блохина, 15', lat:59.9558, lon:30.3012, img:'images/music/DSC08005.jpg', description:`Легендарная котельная, где работали Виктор Цой, Александр Башлачёв, Андрей Машнин. Цой трудился здесь в 1986-1988 годах, именно в этот период родились многие песни. Сегодня это музей и клуб: днем можно увидеть личные вещи и гитару Цоя, а вечером побывать на концерте молодых рок-коллективов.` }
+                ]
+            },
+            jazz: {
+                description: 'Прогулка по джазовым местам города.',
+                points: [
+                    { name:'Филармония джазовой музыки', address:'Загородный проспект, 27/21', lat:59.924217, lon:30.337086, img:'images/music/jazz-hall-spb1.jpg', description:`Свой маршрут стоит начать со старейшей филармонии в России, где выступают как признанные мастера, так и начинающие джазмены. Здесь можно услышать эталонный звук и понять, с чего начинался джаз в СССР.` },
+                    { name:'Улица Рубинштейна', address:'Улица Рубинштейна, 13', lat:59.929407, lon:30.343949, img:'images/music/i (2).webp', description:`Главная ресторанная улица города, на которой исторически пересекались джаз, рок и театр. Сегодня это идеальное место, чтобы почувствовать ритм города и зайти в один из местных баров.` },
+                    { name:'Джаз-клуб Игоря Бутмана', address:'набережная канала Грибоедова, 7', lat:59.939045, lon:30.327313, img:'images/music/02.jpg', description:`Клуб открылся в 2022 году в историческом здании XVIII века, превратив старинные кирпичные своды в современный лофт. Программу лично курирует Игорь Бутман. Дресс-код (без спортивных вещей) и авторское меню делают этот клуб местом для атмосферного вечера.` },
+                    { name:'Бар «Юнион»', address:'Литейный проспект, 61', lat:59.933681, lon:30.347507, img:'images/music/poster_event_1247416.jpg', description:`Одно из ключевых мест, которое притягивает ценителей современной музыки. Музыкальная программа отличается разнообразием — регулярно проходят джазовые джем-сейшны, концерты в жанрах фанк и диско, а также образовательные лекции.` },
+                    { name:'The Hat', address:'улица Белинского, 9', lat:59.938090, lon:30.346599, img:'images/music/Hat-bxSlider-01_1920x1000_01.webp', description:`Стоячий джаз-бар с аутентичной нью-йоркской атмосферой, где царит хаос, теснота и невероятная энергия. Главная особенность — джем-сейшн после полуночи. Вход до 21:00 бесплатный, после — депозит 800 ₽.` }
+                ]
+            }
+        }
+    }
+};
+
+// Данные для еды и туалетов (привязаны к категориям)
+const extraPlaces = {
+    grom: {
+        food: [
+            { name:'Manneken Pis', address:'Казанская ул., 5', lat:59.9305, lon:30.3242, price:'Средний чек: 1 400 ₽' },
+            { name:'Coffee 22', address:'Казанская ул., 22', lat:59.9297, lon:30.3228, price:'Средний чек: 1 550 ₽' }
+        ],
+        wc: [
+            { name:"Общественный туалет", address:"Спасский переулок, 37а", lat:59.928663, lon:30.318329 }
+        ]
+    },
+    music: {
+        food: [
+            { name:'Пироговый дворик', address:'ул. Рубинштейна, 16', lat:59.9290, lon:30.3450, price:'Средний чек: 800 ₽' },
+            { name:'Баррикада', address:'ул. Некрасова, 20', lat:59.9340, lon:30.3510, price:'Средний чек: 1 500 ₽' },
+            { name:'Столовая №1', address:'Невский пр., 44', lat:59.9340, lon:30.3460, price:'Средний чек: 600 ₽' },
+            { name:'Шаверма у Грибоедова', address:'ул. Воронежская, 2', lat:59.9270, lon:30.3590, price:'Средний чек: 350 ₽' }
+        ],
+        wc: [
+            { name:"Общественный туалет", address:"ул. Рубинштейна, 15/17", lat:59.9292, lon:30.3440 },
+            { name:"Общественный туалет", address:"Невский проспект, 47", lat:59.9348, lon:30.3472 },
+            { name:"Общественный туалет", address:"Лиговский проспект, 50", lat:59.9285, lon:30.3550 }
+        ]
+    }
+};
+
+
+/* =========================
+   ИНИЦИАЛИЗАЦИЯ КАРТЫ
+========================= */
+
+const map = L.map('map').setView([59.929,30.333],15);
+
+L.tileLayer(
+    'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+    { attribution:'© OpenStreetMap contributors, Tiles style by HOT' }
+).addTo(map);
+
+let markers = [];
+let routeLine = null;
+let foodMarkers = [];
+let wcMarkers = [];
+
+let currentMainCategory = 'grom';
+let currentSubCategory = 'short';
+let currentPoint = 0;
+
+
+/* =========================
+   ЛОГИКА ПЕРЕКЛЮЧЕНИЯ
+========================= */
+
+function setMainCategory(category) {
+    currentMainCategory = category;
+
+    // Обновляем кнопки главных табов
+    document.getElementById('tabGrom').classList.toggle('active', category === 'grom');
+    document.getElementById('tabMusic').classList.toggle('active', category === 'music');
+
+    // Обновляем тексты
+    document.getElementById('routeMainTitle').textContent = routesData[category].title;
+    document.getElementById('routeMainDesc').textContent = routesData[category].desc;
+    document.getElementById('routeCategory').textContent = routesData[category].category;
+    document.getElementById('routeSubTitle').textContent = routesData[category].subTitle;
+
+    // Генерируем подтабы (30м/1ч или Рок/Джаз)
+    const subTabsContainer = document.getElementById('subTabs');
+    subTabsContainer.innerHTML = '';
+    const tabs = routesData[category].tabs;
+
+    tabs.forEach((tab, index) => {
+        const btn = document.createElement('button');
+        btn.textContent = tab.label;
+        btn.onclick = () => selectSubRoute(tab.id);
+        if (index === 0) btn.classList.add('active'); // Первый таб активен по умолчанию
+        subTabsContainer.appendChild(btn);
+    });
+
+    // Включаем первый подмаршрут
+    selectSubRoute(tabs[0].id);
+}
+
+function selectSubRoute(subId) {
+    currentSubCategory = subId;
+
+    // Обновляем активный класс у подтабов
+    const subButtons = document.getElementById('subTabs').children;
+    const currentTabs = routesData[currentMainCategory].tabs;
+    for(let i = 0; i < subButtons.length; i++) {
+        subButtons[i].classList.toggle('active', currentTabs[i].id === subId);
+    }
+
+    const routeData = routesData[currentMainCategory].data[subId];
+    document.getElementById('routeDescription').textContent = routeData.description;
+
+    document.getElementById('favoriteButton').dataset.route = currentMainCategory + '_' + subId;
+    updateFavoriteButton();
+
+    clearMap();
+
+    // Отрисовка точек (с миниатюрой)
+    document.getElementById('pointList').innerHTML = routeData.points.map((p,i)=>`
+        <button class="point ${i===0?'active':''}" onclick="showPoint(${i})">
+            <span>
+                <b>${i+1}. ${p.name}</b>
+                <small>${p.address}</small>
+            </span>
+        </button>
+    `).join('');
+
+    const coordinates = [];
+    routeData.points.forEach((p,i)=>{
+        coordinates.push([p.lat,p.lon]);
+        const marker=L.marker([p.lat,p.lon]).addTo(map).bindPopup(`<b>${p.name}</b><br>${p.address}`);
+        marker.on('click',()=>showPoint(i));
+        markers.push(marker);
+    });
+
+    if(coordinates.length > 0) {
+        routeLine = L.polyline(coordinates, { color:'#f329a0', weight:5, dashArray:'10 8' }).addTo(map);
+        map.fitBounds(routeLine.getBounds().pad(.15));
+        showPoint(0);
+    }
+}
+
+function showPoint(index) {
+    const points = routesData[currentMainCategory].data[currentSubCategory].points;
+    const p = points[index];
+    currentPoint = index;
+
+    document.querySelectorAll('.point').forEach((el,i)=>{
+        el.classList.toggle('active',i===index);
+    });
+
+    document.getElementById('pointDescription').innerHTML=`
+        <span class="category">ТОЧКА ${index+1} / ${points.length}</span>
+
+        <!-- Блок с картинкой -->
+        <img class="point-img" src="${p.img}" alt="${p.name}"
+             onerror="this.src='https://placehold.co/600x300/ffe1f1/f329a0?text=Фото+места+—+${encodeURIComponent(p.name)}'">
+
+        <h3>${p.name}</h3>
+        <b>${p.address}</b>
+        <p>${p.description.replace(/\n/g,'<br>')}</p>
+        <a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}">Построить маршрут →</a>
+    `;
+
+    map.flyTo([p.lat,p.lon],16);
+    if(markers[index]) markers[index].openPopup();
+}
+
+function clearMap() {
+    markers.forEach(m=>map.removeLayer(m));
+    markers = [];
+    foodMarkers.forEach(m=>map.removeLayer(m));
+    foodMarkers = [];
+    wcMarkers.forEach(m=>map.removeLayer(m));
+    wcMarkers = [];
+    if(routeLine) {
+        map.removeLayer(routeLine);
+        routeLine = null;
+    }
+}
+
+/* =========================
+   СЛОИ (ЕДА И ТУАЛЕТЫ)
+========================= */
+
+function showLayer(type, button) {
+    document.querySelectorAll('.map-buttons button').forEach(b=>b.classList.remove('active'));
+    button.classList.add('active');
+
+    foodMarkers.forEach(m=>map.removeLayer(m));
+    wcMarkers.forEach(m=>map.removeLayer(m));
+    foodMarkers=[];
+    wcMarkers=[];
+
+    if(type==='route') return;
+
+    const places = extraPlaces[currentMainCategory][type];
+
+    places.forEach(place=>{
+        const marker = L.marker([place.lat, place.lon]).addTo(map);
+
+        if(type === 'food') {
+            marker.bindPopup(`<b>${place.name}</b><br>${place.address}<br>${place.price}`);
+            foodMarkers.push(marker);
+        } else {
+            marker.bindPopup(`<b>${place.name}</b><br>${place.address}`);
+            wcMarkers.push(marker);
+        }
+    });
+}
+
+
+/* =========================
+   ГЕОЛОКАЦИЯ
+========================= */
+
+function startGeolocation() {
+    if(!navigator.geolocation) {
+        document.getElementById('geoStatus').textContent = 'Геолокация не поддерживается браузером.';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(position=>{
+        const lat=position.coords.latitude;
+        const lon=position.coords.longitude;
+
+        L.circleMarker([lat,lon],{
+            radius:9, color:'#171317', fillColor:'#58b8aa', fillOpacity:1
+        }).addTo(map);
+
+        let nearest=0;
+        let minDistance=Infinity;
+        const points = routesData[currentMainCategory].data[currentSubCategory].points;
+
+        points.forEach((p,i)=>{
+            const distance = map.distance([lat,lon],[p.lat,p.lon]);
+            if(distance<minDistance) {
+                minDistance=distance;
+                nearest=i;
+            }
+        });
+
+        map.setView([lat,lon],16);
+
+        if(minDistance<100) {
+            showPoint(nearest);
+            document.getElementById('geoStatus').textContent = 'Ты рядом с точкой: ' + points[nearest].name;
+        } else {
+            document.getElementById('geoStatus').textContent = 'До ближайшей точки: ' + Math.round(minDistance) + ' м';
+        }
+    },()=>{
+        document.getElementById('geoStatus').textContent = 'Не удалось определить местоположение.';
+    });
+}
+
+
+/* =========================
+   ИЗБРАННОЕ
+========================= */
+
+function getFavorites() {
+    return JSON.parse(localStorage.getItem('contextFavorites') || '[]');
+}
+
+function toggleFavorite() {
+    const button = document.getElementById('favoriteButton');
+    const routeId = button.dataset.route; // Например: "music_rock"
+    let favorites = getFavorites();
+
+    if(favorites.includes(routeId)) {
+        favorites = favorites.filter(item=>item!==routeId);
+    } else {
+        favorites.push(routeId);
+    }
+
+    localStorage.setItem('contextFavorites', JSON.stringify(favorites));
+    updateFavoriteButton();
+    renderFavorites();
+}
+
+function updateFavoriteButton() {
+    const button = document.getElementById('favoriteButton');
+    const routeId = button.dataset.route;
+    if(!routeId) return;
+
+    const saved = getFavorites().includes(routeId);
+    button.textContent = saved ? '♥ Удалить из избранного' : '♡ Добавить в избранное';
+}
+
+function renderFavorites() {
+    const container = document.getElementById('savedGrid');
+    const favorites = getFavorites();
+
+    if(favorites.length === 0) {
+        container.innerHTML = '<p>Пока здесь ничего нет. Добавь понравившийся маршрут в избранное!</p>';
+        return;
+    }
+
+    container.innerHTML = favorites.map(routeId => {
+        const [catId, subId] = routeId.split('_');
+        const cat = routesData[catId];
+        const sub = cat.tabs.find(t => t.id === subId);
+
+        return `
+            <div class="card">
+                <div class="card-content">
+                    <span class="category">${cat.category.split(' ')[0]}</span>
+                    <h3>${cat.title}: ${sub.label}</h3>
+                    <button class="btn" style="margin-bottom: 10px;" onclick="openSavedRoute('${catId}', '${subId}')">Открыть маршрут</button>
+                    <button class="remove-btn" onclick="removeFavorite('${routeId}')">Удалить из избранного ✕</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function removeFavorite(routeId) {
+    const favorites = getFavorites().filter(item => item !== routeId);
+    localStorage.setItem('contextFavorites', JSON.stringify(favorites));
+    renderFavorites();
+    updateFavoriteButton();
+}
+
+function openSavedRoute(catId, subId) {
+    setMainCategory(catId);
+    selectSubRoute(subId);
+    document.getElementById('route').scrollIntoView({behavior:'smooth'});
+}
+
+/* =========================
+   ФОРМЫ
+========================= */
+
+function sendForm(event,subject) {
+    event.preventDefault();
+    const fields = [...event.target.querySelectorAll('input,textarea')];
+    const body = fields.map(f=>f.value).join('\n\n');
+    const url = 'mailto:hello@example.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    window.location.href = url;
+    alert('Откроется почтовое приложение для отправки сообщения.');
+}
+
+/* =========================
+   ЗАПУСК
+========================= */
+setMainCategory('grom'); // Инициализация интерфейса по умолчанию
+renderFavorites();
+
+</script>
+
+</body>
+</html>
